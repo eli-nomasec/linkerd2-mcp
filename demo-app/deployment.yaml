@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-b
+  labels:
+    app: service-b
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-b
+  template:
+    metadata:
+      labels:
+        app: service-b
+    spec:
+      containers:
+        - name: service-b
+          image: golang:1.22-alpine # Replace with your built/pushed image for real demo
+          command: ["go", "run", "/app/main.go"]
+          args: ["--mode=b"]
+          volumeMounts:
+            - name: app-src
+              mountPath: /app
+          ports:
+            - containerPort: 8080
+      volumes:
+        - name: app-src
+          hostPath:
+            path: /Users/elig/dev/test/linkerd2-mcp/demo-app
+            type: Directory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-b
+spec:
+  selector:
+    app: service-b
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-a
+  labels:
+    app: service-a
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-a
+  template:
+    metadata:
+      labels:
+        app: service-a
+    spec:
+      containers:
+        - name: service-a
+          image: golang:1.22-alpine # Replace with your built/pushed image for real demo
+          command: ["go", "run", "/app/main.go"]
+          args: ["--mode=a", "--target=service-b"]
+          volumeMounts:
+            - name: app-src
+              mountPath: /app
+      volumes:
+        - name: app-src
+          hostPath:
+            path: /Users/elig/dev/test/linkerd2-mcp/demo-app
+            type: Directory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-a
+spec:
+  selector:
+    app: service-a
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

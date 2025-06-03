@@ -1,0 +1,27 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/eli-nomasec/mcp-server
+  tag: latest
+  pullPolicy: IfNotPresent
+
+collectorImage:
+  repository: ghcr.io/eli-nomasec/mcp-collector
+  tag: latest
+  pullPolicy: IfNotPresent
+
+redis:
+  enabled: true
+  image: valkey/valkey:7-alpine
+  persistence: false
+
+service:
+  type: ClusterIP
+  port: 10900
+
+resources: {}
+
+collector:
+  env:
+    REDIS_URL: "redis:6379"
+    PROMETHEUS_URL: "http://prometheus.linkerd-viz:9090"
