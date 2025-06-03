@@ -1,0 +1,32 @@
+// proto/mcp.proto
+
+syntax = "proto3";
+
+package mcp.v1;
+
+option go_package = "github.com/eli-nomasec/linkerd2-mcp/proto/mcp/v1;v1";
+
+ // Placeholder service definition
+service MeshContext {
+  rpc GetMeshGraph(GetMeshGraphRequest) returns (GetMeshGraphResponse);
+  rpc ApplyAuthorizationPolicy(ApplyAuthorizationPolicyRequest) returns (ApplyAuthorizationPolicyResponse);
+}
+
+// Placeholder messages
+message GetMeshGraphRequest {}
+
+message GetMeshGraphResponse {
+  string json_graph = 1;
+}
+
+// Mutation: ApplyAuthorizationPolicy
+message ApplyAuthorizationPolicyRequest {
+  string namespace = 1;
+  string name = 2;
+  string json_spec = 3;
+}
+
+message ApplyAuthorizationPolicyResponse {
+  bool accepted = 1;
+  string message = 2;
+}
