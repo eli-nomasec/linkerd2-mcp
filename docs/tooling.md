@@ -18,7 +18,7 @@ Everything you need to **build, run, test, and ship** the Linkerd MCP project.
 | **Prometheus** | v2.52 (comes with Linkerd viz) | Metrics source |
 | **Buf CLI** | 1.29+ | Protobuf lint & breaking‑change checks |
 | **Helm** | 3.14+ | Deploy Collector, MCP, Redis |
-| **Taskfile (optional)** | 3.x | Shortcut commands (`task test`) |
+| **Makefile (optional)** | 3.x | Shortcut commands (`task test`) |
 
 ---
 
@@ -34,7 +34,7 @@ internal/
   redis/           → helper (snapshot, delta, election)
 docs/              → project docs
 helm/              → chart/
-Taskfile.yml       → convenience commands
+Makefile           → convenience commands
 ```
 
 ---

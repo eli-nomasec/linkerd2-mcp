@@ -20,7 +20,7 @@ internal/
   redis/           → Redis helpers (snapshot, delta, election)
 docs/              → project docs
 helm/              → chart/
-Taskfile.yml       → convenience commands
+Makefile           → convenience commands
 ```
 
 ## Getting Started
