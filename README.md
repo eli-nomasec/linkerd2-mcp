@@ -1,4 +1,4 @@
-# Linkerd MCP
+# Linkerd2 MCP
 
 > **⚠️ This project is a Work In Progress (WIP) and is still under active development. Features and APIs may change at any time.**
 > 
