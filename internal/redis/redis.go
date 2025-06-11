@@ -5,43 +5,65 @@ package redisutil
 import (
 	"context"
 	"time"
+
+	"github.com/redis/go-redis/v9"
 )
 
 type RedisClient struct {
-	Addr string
+	Addr   string
+	Client *redis.Client
 	// Add fields for connection pool, logger, etc.
 }
 
 func NewRedisClient(addr string) *RedisClient {
-	return &RedisClient{Addr: addr}
+	rdb := redis.NewClient(&redis.Options{
+		Addr: addr,
+	})
+	return &RedisClient{
+		Addr:   addr,
+		Client: rdb,
+	}
 }
 
-// Placeholder: Set mesh snapshot with expiration
+// SetMeshSnapshot sets the mesh snapshot with expiration (ttl)
 func (r *RedisClient) SetMeshSnapshot(ctx context.Context, data []byte, ttl time.Duration) error {
-	// TODO: Implement Redis SET with EX
-	return nil
+	return r.Client.Set(ctx, "mesh:snapshot", data, ttl).Err()
 }
 
-// Placeholder: Publish mesh delta
+// PublishMeshDelta publishes a mesh delta to the mesh:delta channel
 func (r *RedisClient) PublishMeshDelta(ctx context.Context, delta []byte) error {
-	// TODO: Implement Redis PUBLISH
-	return nil
+	return r.Client.Publish(ctx, "mesh:delta", delta).Err()
 }
 
-// Placeholder: Leader election using SETNX
+// TryAcquireLeader attempts to acquire leadership using SETNX with expiration
 func (r *RedisClient) TryAcquireLeader(ctx context.Context, podUID string, ttl time.Duration) (bool, error) {
-	// TODO: Implement SETNX for leader election
-	return false, nil
+	ok, err := r.Client.SetNX(ctx, "mesh:leader", podUID, ttl).Result()
+	return ok, err
 }
 
-// Placeholder: Get mesh snapshot from Redis
+// GetMeshSnapshot retrieves the mesh snapshot from Redis
 func (r *RedisClient) GetMeshSnapshot(ctx context.Context) ([]byte, error) {
-	// TODO: Implement Redis GET for mesh:snapshot
-	return []byte{}, nil
+	val, err := r.Client.Get(ctx, "mesh:snapshot").Bytes()
+	if err == redis.Nil {
+		return nil, nil // Not found
+	}
+	return val, err
 }
 
-// Placeholder: Subscribe to mesh:delta channel
+// SubscribeMeshDelta subscribes to the mesh:delta channel and calls handler on each message
 func (r *RedisClient) SubscribeMeshDelta(ctx context.Context, handler func([]byte)) error {
-	// TODO: Implement Redis SUBSCRIBE to mesh:delta and call handler on each message
-	return nil
+	sub := r.Client.Subscribe(ctx, "mesh:delta")
+	ch := sub.Channel()
+	for {
+		select {
+		case msg, ok := <-ch:
+			if !ok {
+				return nil
+			}
+			handler([]byte(msg.Payload))
+		case <-ctx.Done():
+			_ = sub.Close()
+			return ctx.Err()
+		}
+	}
 }

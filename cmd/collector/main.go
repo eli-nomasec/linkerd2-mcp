@@ -300,7 +300,8 @@ func main() {
 		for {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
-			query := `sum by(src,dst,meshed,tls)(rate(linkerd_request_total[30s]))`
+			// Updated query for Linkerd 2.18+ proxy metrics
+			query := `sum by(dst_namespace, dst_deployment, dst_service)(rate(request_total{direction="outbound"}[30s]))`
 			result, warnings, err := v1api.Query(ctx, query, time.Now())
 			if err != nil {
 				fmt.Printf("Prometheus query error: %v\n", err)
@@ -312,15 +313,20 @@ func main() {
 				if ok {
 					var edges []graph.Edge
 					for _, sample := range vector {
-						src := string(sample.Metric["src"])
-						dst := string(sample.Metric["dst"])
-						tls := string(sample.Metric["tls"]) == "true"
+						dstNamespace := string(sample.Metric["dst_namespace"])
+						dstDeployment := string(sample.Metric["dst_deployment"])
+						dstService := string(sample.Metric["dst_service"])
 						rps := float64(sample.Value)
+						// Compose a unique identifier for the destination
+						dst := dstNamespace + "/" + dstDeployment
+						if dstService != "" {
+							dst += "/" + dstService
+						}
 						edges = append(edges, graph.Edge{
-							Src: src,
+							Src: "", // src is not available in this metric; can be extended if needed
 							Dst: dst,
 							RPS: rps,
-							TLS: tls,
+							TLS: false, // TLS info not available in this metric; can be extended if needed
 						})
 					}
 					mesh.Edges = edges
@@ -347,7 +353,7 @@ func main() {
 					fmt.Println("Published mesh snapshot to Redis")
 				}
 			}
-			time.Sleep(5 * time.Minute)
+			time.Sleep(30 * time.Second)
 		}
 	}()
 

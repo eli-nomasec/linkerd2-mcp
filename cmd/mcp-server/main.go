@@ -9,6 +9,7 @@ import (
 	"net"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	pb "github.com/eli-nomasec/linkerd2-mcp/internal/gen/pb"
 	"github.com/eli-nomasec/linkerd2-mcp/internal/graph"
@@ -122,6 +123,8 @@ func main() {
 	}
 	grpcServer := grpc.NewServer()
 	pb.RegisterMeshContextServer(grpcServer, &server{mesh: mesh})
+	// Enable gRPC reflection for introspection
+	reflection.Register(grpcServer)
 	fmt.Println("MCP Server listening on :10900")
 	if err := grpcServer.Serve(lis); err != nil {
 		panic(err)
